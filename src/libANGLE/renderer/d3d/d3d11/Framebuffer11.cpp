@@ -93,7 +93,27 @@ gl::Error Framebuffer11::invalidateSwizzles() const
 gl::Error Framebuffer11::clear(const gl::Data &data, const ClearParameters &clearParams)
 {
     Clear11 *clearer = mRenderer->getClearer();
-    gl::Error error = clearer->clearFramebuffer(clearParams, mData);
+    gl::Error error(GL_NO_ERROR);
+
+    const gl::FramebufferAttachment *colorAttachment = mData.getFirstColorAttachment();
+    if (clearParams.scissorEnabled == true && colorAttachment != nullptr &&
+        UsePresentPathFast(mRenderer, colorAttachment))
+    {
+        // If the current framebuffer is using the default colorbuffer, and present path fast is
+        // active, and the scissor rect is enabled, then we should invert the scissor rect
+        // vertically
+        ClearParameters presentPathFastClearParams = clearParams;
+        gl::Extents framebufferSize                = colorAttachment->getSize();
+        presentPathFastClearParams.scissor.y       = framebufferSize.height -
+                                               presentPathFastClearParams.scissor.y -
+                                               presentPathFastClearParams.scissor.height;
+        error = clearer->clearFramebuffer(presentPathFastClearParams, mData);
+    }
+    else
+    {
+        error = clearer->clearFramebuffer(clearParams, mData);
+    }
+
     if (error.isError())
     {
         return error;
@@ -282,24 +302,11 @@ gl::Error Framebuffer11::readPixelsImpl(const gl::Rectangle &area,
                              "Unimplemented pixel store parameters in readPixelsImpl");
         }
 
-        RenderTarget11 *renderTarget = nullptr;
-        gl::Error error = readAttachment->getRenderTarget(&renderTarget);
-        if (error.isError())
-        {
-            return error;
-        }
-
-        ID3D11Resource *renderTargetResource = renderTarget->getTexture();
-        ASSERT(renderTargetResource);
-
-        unsigned int subresourceIndex = renderTarget->getSubresourceIndex();
-        TextureHelper11 textureHelper = TextureHelper11::MakeAndReference(renderTargetResource);
-
         Buffer11 *packBufferStorage = GetImplAs<Buffer11>(packBuffer);
         PackPixelsParams packParams(area, format, type, static_cast<GLuint>(outputPitch), pack,
                                     reinterpret_cast<ptrdiff_t>(pixels));
 
-        return packBufferStorage->packPixels(textureHelper, subresourceIndex, packParams);
+        return packBufferStorage->packPixels(*readAttachment, packParams);
     }
 
     return mRenderer->readFromAttachment(*readAttachment, area, format, type,
@@ -341,8 +348,27 @@ gl::Error Framebuffer11::blit(const gl::Rectangle &sourceArea, const gl::Rectang
                 }
                 ASSERT(drawRenderTarget);
 
-                error = mRenderer->blitRenderbufferRect(sourceArea, destArea, readRenderTarget, drawRenderTarget,
-                                                        filter, scissor, blitRenderTarget, false, false);
+                const bool invertColorSource   = UsePresentPathFast(mRenderer, readBuffer);
+                gl::Rectangle actualSourceArea = sourceArea;
+                if (invertColorSource)
+                {
+                    RenderTarget11 *readRenderTarget11 = GetAs<RenderTarget11>(readRenderTarget);
+                    actualSourceArea.y                 = readRenderTarget11->getHeight() - sourceArea.y;
+                    actualSourceArea.height            = -sourceArea.height;
+                }
+
+                const bool invertColorDest   = UsePresentPathFast(mRenderer, &drawBuffer);
+                gl::Rectangle actualDestArea = destArea;
+                if (invertColorDest)
+                {
+                    RenderTarget11 *drawRenderTarget11 = GetAs<RenderTarget11>(drawRenderTarget);
+                    actualDestArea.y                   = drawRenderTarget11->getHeight() - destArea.y;
+                    actualDestArea.height              = -destArea.height;
+                }
+
+                error = mRenderer->blitRenderbufferRect(actualSourceArea, actualDestArea,
+                                                        readRenderTarget, drawRenderTarget, filter,
+                                                        scissor, blitRenderTarget, false, false);
                 if (error.isError())
                 {
                     return error;

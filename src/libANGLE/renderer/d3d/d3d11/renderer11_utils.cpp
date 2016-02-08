@@ -221,6 +221,9 @@ D3D11_QUERY ConvertQueryType(GLenum queryType)
       case GL_ANY_SAMPLES_PASSED_EXT:
       case GL_ANY_SAMPLES_PASSED_CONSERVATIVE_EXT:   return D3D11_QUERY_OCCLUSION;
       case GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN: return D3D11_QUERY_SO_STATISTICS;
+      case GL_TIME_ELAPSED_EXT:
+          // Two internal queries are also created for begin/end timestamps
+          return D3D11_QUERY_TIMESTAMP_DISJOINT;
       default: UNREACHABLE();                        return D3D11_QUERY_EVENT;
     }
 }
@@ -289,7 +292,7 @@ unsigned int GetReservedVertexUniformVectors(D3D_FEATURE_LEVEL featureLevel)
         case D3D_FEATURE_LEVEL_9_3:
         case D3D_FEATURE_LEVEL_9_2:
         case D3D_FEATURE_LEVEL_9_1:
-            return 2;  // dx_ViewAdjust and dx_ViewCoords
+            return 3;  // dx_ViewAdjust, dx_ViewCoords and dx_ViewScale
 
         default:
             UNREACHABLE();
@@ -310,7 +313,7 @@ unsigned int GetReservedFragmentUniformVectors(D3D_FEATURE_LEVEL featureLevel)
         case D3D_FEATURE_LEVEL_9_3:
         case D3D_FEATURE_LEVEL_9_2:
         case D3D_FEATURE_LEVEL_9_1:
-            return 2;
+            return 3;
 
         default:
             UNREACHABLE();
@@ -1198,7 +1201,10 @@ void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, cons
     extensions->occlusionQueryBoolean = GetOcclusionQuerySupport(featureLevel);
     extensions->fence = GetEventQuerySupport(featureLevel);
     extensions->timerQuery = false; // Unimplemented
-    extensions->disjointTimerQuery       = false;
+    extensions->disjointTimerQuery          = true;
+    extensions->queryCounterBitsTimeElapsed = 64;
+    extensions->queryCounterBitsTimestamp =
+        0;  // Timestamps cannot be supported due to D3D11 limitations
     extensions->robustness = true;
     extensions->blendMinMax = true;
     extensions->framebufferBlit = GetFramebufferBlitSupport(featureLevel);
@@ -1218,6 +1224,7 @@ void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, cons
     extensions->packSubimage             = true;
     extensions->vertexArrayObject        = true;
     extensions->noError                  = true;
+    extensions->lossyETCDecode           = true;
 
     // D3D11 Feature Level 10_0+ uses SV_IsFrontFace in HLSL to emulate gl_FrontFacing.
     // D3D11 Feature Level 9_3 doesn't support SV_IsFrontFace, and has no equivalent, so can't support gl_FrontFacing.
@@ -1659,6 +1666,18 @@ gl::ErrorOrResult<TextureHelper11> CreateStagingTexture(GLenum textureType,
     }
 
     return TextureHelper11::MakeAndPossess3D(stagingTex);
+}
+
+bool UsePresentPathFast(const Renderer11 *renderer,
+                        const gl::FramebufferAttachment *framebufferAttachment)
+{
+    if (framebufferAttachment == nullptr)
+    {
+        return false;
+    }
+
+    return (framebufferAttachment->type() == GL_FRAMEBUFFER_DEFAULT &&
+            renderer->presentPathFastEnabled());
 }
 
 }  // namespace rx

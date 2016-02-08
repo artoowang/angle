@@ -156,6 +156,7 @@ Extensions::Extensions()
       maxDebugGroupStackDepth(0),
       maxLabelLength(0),
       noError(false),
+      lossyETCDecode(false),
       colorBufferFloat(false)
 {
 }
@@ -225,6 +226,8 @@ std::vector<std::string> Extensions::getStrings() const
     InsertExtensionString("GL_KHR_debug",                        debug,                     &extensionStrings);
     // TODO(jmadill): Enable this when complete.
     //InsertExtensionString("GL_KHR_no_error",                     noError,                   &extensionStrings);
+
+    InsertExtensionString("GL_ANGLE_lossy_etc_decode",           lossyETCDecode,            &extensionStrings);
     // clang-format on
 
     return extensionStrings;
@@ -694,6 +697,7 @@ ClientExtensions::ClientExtensions()
       deviceCreation(false),
       deviceCreationD3D11(false),
       x11Visual(false),
+      experimentalPresentPath(false),
       clientGetAllProcAddresses(false)
 {
 }
@@ -713,6 +717,7 @@ std::vector<std::string> ClientExtensions::getStrings() const
     InsertExtensionString("EGL_ANGLE_device_creation",             deviceCreation,            &extensionStrings);
     InsertExtensionString("EGL_ANGLE_device_creation_d3d11",       deviceCreationD3D11,       &extensionStrings);
     InsertExtensionString("EGL_ANGLE_x11_visual",                  x11Visual,                 &extensionStrings);
+    InsertExtensionString("EGL_ANGLE_experimental_present_path",   experimentalPresentPath,   &extensionStrings);
     InsertExtensionString("EGL_KHR_client_get_all_proc_addresses", clientGetAllProcAddresses, &extensionStrings);
     // clang-format on
 

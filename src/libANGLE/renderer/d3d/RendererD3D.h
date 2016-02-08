@@ -243,6 +243,8 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
     void pushGroupMarker(GLsizei length, const char *marker) override;
     void popGroupMarker() override;
 
+    void setGPUDisjoint();
+
     GLint getGPUDisjoint() override;
     GLint64 getTimestamp() override;
 
@@ -250,6 +252,8 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
     virtual gl::Error clearTextures(gl::SamplerType samplerType, size_t rangeStart, size_t rangeEnd) = 0;
 
     virtual egl::Error getEGLDevice(DeviceImpl **device) = 0;
+
+    bool presentPathFastEnabled() const { return mPresentPathFastEnabled; }
 
   protected:
     virtual bool getLUID(LUID *adapterLuid) const = 0;
@@ -270,6 +274,8 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
     gl::DebugAnnotator *mAnnotator;
 
     std::vector<TranslatedAttribute> mTranslatedAttribCache;
+
+    bool mPresentPathFastEnabled;
 
   private:
     gl::Error genericDrawArrays(const gl::Data &data,
@@ -326,20 +332,8 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
 
     mutable bool mWorkaroundsInitialized;
     mutable WorkaroundsD3D mWorkarounds;
-};
 
-struct dx_VertexConstants
-{
-    float depthRange[4];
-    float viewAdjust[4];
-    float viewCoords[4];
-};
-
-struct dx_PixelConstants
-{
-    float depthRange[4];
-    float viewCoords[4];
-    float depthFront[4];
+    bool mDisjoint;
 };
 
 }

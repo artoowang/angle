@@ -275,6 +275,9 @@ struct Extensions
     // KHR_no_error
     bool noError;
 
+    // GL_ANGLE_lossy_etc_decode
+    bool lossyETCDecode;
+
     // ES3 Extension support
 
     // GL_EXT_color_buffer_float
@@ -525,6 +528,9 @@ struct ClientExtensions
 
     // EGL_ANGLE_x11_visual
     bool x11Visual;
+
+    // EGL_ANGLE_experimental_present_path
+    bool experimentalPresentPath;
 
     // EGL_KHR_client_get_all_proc_addresses
     bool clientGetAllProcAddresses;
