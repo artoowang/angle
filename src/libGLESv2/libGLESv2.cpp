@@ -1562,4 +1562,11 @@ void GL_APIENTRY glGetPointervKHR(GLenum pname, void **params)
 {
     return gl::GetPointervKHR(pname, params);
 }
+
+// TODO: test
+void GL_APIENTRY angleGetFramebufferD3D11Texture2D(GLuint framebuffer, void **d3d11_texture_2d)
+{
+    return gl::GetFramebufferD3D11Texture2D(framebuffer, d3d11_texture_2d);
+}
+
 }

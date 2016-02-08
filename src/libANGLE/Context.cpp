@@ -14,6 +14,7 @@
 
 #include "common/platform.h"
 #include "common/utilities.h"
+#include "libANGLE/angletypes.h"
 #include "libANGLE/Buffer.h"
 #include "libANGLE/Compiler.h"
 #include "libANGLE/Display.h"
@@ -23,6 +24,8 @@
 #include "libANGLE/Program.h"
 #include "libANGLE/Query.h"
 #include "libANGLE/Renderbuffer.h"
+#include "libANGLE/renderer/d3d/d3d11/RenderTarget11.h"
+#include "libANGLE/renderer/d3d/FramebufferD3D.h"
 #include "libANGLE/ResourceManager.h"
 #include "libANGLE/Sampler.h"
 #include "libANGLE/Surface.h"
@@ -2416,6 +2419,24 @@ void Context::invalidateSubFramebuffer(GLenum target,
             return;
         }
     }
+}
+
+void Context::getFramebufferD3D11Texture2D(GLuint framebufferHandle, void **d3d11_texture_2d)
+{
+    if (!d3d11_texture_2d)
+        return;
+    const Framebuffer *framebuffer = checkFramebufferAllocation(framebufferHandle);
+    const rx::FramebufferD3D *framebufferD3D = rx::GetImplAs<rx::FramebufferD3D>(framebuffer);
+    const AttachmentList &colorbuffers = framebufferD3D->getColorAttachmentsForRender();
+    // TODO: currently return the first color attachment.
+    ASSERT(colorbuffers.size() > 0);
+    const FramebufferAttachment *colorbuffer = colorbuffers[0];
+    ASSERT(colorbuffer);
+    rx::RenderTarget11 *renderTarget = nullptr;
+    colorbuffer->getRenderTarget(&renderTarget);
+    ASSERT(renderTarget);
+    // TODO: is it safe to assume the returned ID3D11Resource* is always ID3D11Texture2D*?
+    *d3d11_texture_2d = renderTarget->getTexture();
 }
 
 }  // namespace gl

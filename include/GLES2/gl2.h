@@ -666,6 +666,9 @@ GL_APICALL void GL_APIENTRY glViewport (GLint x, GLint y, GLsizei width, GLsizei
 #endif
 #endif /* GL_ES_VERSION_2_0 */
 
+// TODO: test
+GL_APICALL void GL_APIENTRY angleGetFramebufferD3D11Texture2D(GLuint framebuffer, void **d3d11_texture_2d);
+
 #ifdef __cplusplus
 }
 #endif

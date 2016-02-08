@@ -316,6 +316,8 @@ class Context final : public ValidationContext
     void syncRendererState();
     void syncRendererState(const State::DirtyBits &bitMask);
 
+    void getFramebufferD3D11Texture2D(GLuint framebufferHandle, void **d3d11_texture_2d);
+
   private:
     void checkVertexArrayAllocation(GLuint vertexArray);
     void checkTransformFeedbackAllocation(GLuint transformFeedback);

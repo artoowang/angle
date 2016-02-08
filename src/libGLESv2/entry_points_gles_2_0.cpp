@@ -4152,4 +4152,18 @@ void GL_APIENTRY Viewport(GLint x, GLint y, GLsizei width, GLsizei height)
     }
 }
 
+void GL_APIENTRY GetFramebufferD3D11Texture2D(GLuint framebuffer, void **d3d11_texture_2d)
+{
+    EVENT("(GLuint framebuffer = %d, void **d3d11_texture_2d = 0x%x)", framebuffer, d3d11_texture_2d);
+
+    if (!d3d11_texture_2d)
+        return;
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->getFramebufferD3D11Texture2D(framebuffer, d3d11_texture_2d);
+    }
+}
+
 }

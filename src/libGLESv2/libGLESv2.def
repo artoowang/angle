@@ -313,3 +313,6 @@ EXPORTS
     ANGLEPlatformCurrent            @290
     ANGLEPlatformInitialize         @291
     ANGLEPlatformShutdown           @292
+
+    ; TODO: Test
+    angleGetFramebufferD3D11Texture2D @318

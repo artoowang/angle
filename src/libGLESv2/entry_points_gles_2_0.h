@@ -158,6 +158,9 @@ ANGLE_EXPORT void GL_APIENTRY VertexAttrib4fv(GLuint indx, const GLfloat* values
 ANGLE_EXPORT void GL_APIENTRY VertexAttribPointer(GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr);
 ANGLE_EXPORT void GL_APIENTRY Viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
+// TODO: test
+ANGLE_EXPORT void GL_APIENTRY GetFramebufferD3D11Texture2D(GLuint framebuffer, void **d3d11_texture_2d);
+
 }
 
 #endif // LIBGLESV2_ENTRYPOINTGLES20_H_
